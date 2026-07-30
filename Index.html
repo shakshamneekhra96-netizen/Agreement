@@ -1,0 +1,1175 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Friendship Trust Agreement</title>
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Special+Elite&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome (optional icons) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- SignaturePad and html2pdf (CDN allowed) -->
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.9.2/dist/html2pdf.bundle.min.js"></script>
+
+  <style>
+    /* ============================
+       Vintage Friendship Agreement
+       Single-file: HTML/CSS/JS only
+       ============================ */
+
+    :root{
+      --wood-1: #4b2f16;
+      --wood-2: #6a3f1c;
+      --paper: #f6ead2; /* warm parchment base */
+      --paper-dark: #e8d4b8;
+      --ink: #2b1b12;
+      --sepia: rgba(60,40,20,0.06);
+      --gold: #c08b2a;
+      --muted: #6b5a4b;
+      --glass: rgba(255,255,255,0.03);
+      --accent: #7a3b21;
+    }
+
+    /* Full-screen wooden desk */
+    html,body{
+      height:100%;
+      margin:0;
+      font-family: "Cinzel", serif;
+      background: radial-gradient(1200px 600px at 15% 10%, rgba(255,220,170,0.06), transparent 10%),
+                  linear-gradient(180deg, var(--wood-1), var(--wood-2));
+      color:var(--ink);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      overflow: auto;
+    }
+
+    /* Wooden table texture using gradients and noise-like details */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      background-image:
+        repeating-linear-gradient(90deg, rgba(0,0,0,0.02) 0 1px, transparent 1px 6px),
+        linear-gradient(90deg, rgba(255,255,255,0.02), rgba(0,0,0,0.04)),
+        radial-gradient(800px 200px at 80% 10%, rgba(255,220,170,0.03), transparent 20%),
+        linear-gradient(0deg, rgba(0,0,0,0.15), rgba(0,0,0,0.05));
+      pointer-events:none;
+      mix-blend-mode:multiply;
+      z-index:0;
+    }
+
+    /* Page container centers the parchment */
+    .stage{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:40px;
+      box-sizing:border-box;
+      position:relative;
+      z-index:1;
+    }
+
+    /* Loading overlay with spinner */
+    .loading{
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(180deg, rgba(0,0,0,0.3), rgba(0,0,0,0.55));
+      z-index:2000;
+      transition:opacity .8s ease, transform .6s ease;
+    }
+    .loading.hidden{opacity:0; pointer-events:none; transform:scale(1.02);}
+
+    .spinner{
+      width:96px;
+      height:96px;
+      border-radius:50%;
+      background:
+        conic-gradient(from 180deg, rgba(255,230,175,0.9), rgba(255,200,130,0.6)),
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), transparent);
+      box-shadow:0 8px 30px rgba(0,0,0,0.6), inset 0 -6px 20px rgba(0,0,0,0.15);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      animation:spin 1.6s linear infinite;
+    }
+    @keyframes spin{
+      to{transform:rotate(360deg)}
+    }
+    .spinner::after{
+      content:"";
+      width:44px;height:44px;border-radius:50%;
+      background:var(--gold);
+      box-shadow:0 2px 12px rgba(0,0,0,0.3), 0 0 20px rgba(255,230,120,0.08);
+      opacity:0.9;
+    }
+
+    /* Parchment wrapper */
+    .parchment-wrap{
+      width:min(1100px,98%);
+      max-width:1100px;
+      perspective:1200px;
+      position:relative;
+    }
+
+    /* The parchment itself */
+    .parchment{
+      background: linear-gradient(180deg, var(--paper) 0%, var(--paper-dark) 40%, #e0cfae 100%);
+      padding:48px 54px;
+      border-radius:12px;
+      box-shadow:
+        0 18px 40px rgba(0,0,0,0.55),
+        0 6px 12px rgba(0,0,0,0.35);
+      position:relative;
+      transform-origin:center top;
+      overflow:visible;
+      transition:transform .9s cubic-bezier(.18,.9,.3,1), opacity .6s ease;
+      z-index:30;
+      /* paper texture using multiple gradients */
+      background-image:
+        linear-gradient(180deg, rgba(255,255,255,0.02), transparent 10%),
+        linear-gradient(90deg, rgba(0,0,0,0.02) 0 1px, transparent 1px 4px),
+        radial-gradient(1200px 200px at 10% 10%, rgba(255,235,200,0.06), transparent 12%),
+        linear-gradient(180deg, var(--paper), var(--paper-dark));
+    }
+
+    /* Burnt edges using pseudo elements (dark vignette + torn look) */
+    .parchment::before,
+    .parchment::after{
+      content:"";
+      position:absolute;
+      inset:-18px;
+      z-index:-1;
+      border-radius: 16px;
+      pointer-events:none;
+      background:
+        radial-gradient(200px 120px at 0% 0%, rgba(0,0,0,0.45), transparent 30%),
+        radial-gradient(250px 140px at 100% 0%, rgba(0,0,0,0.45), transparent 30%),
+        linear-gradient(0deg, rgba(0,0,0,0.25), rgba(0,0,0,0.08));
+      mix-blend-mode:multiply;
+      filter:blur(5px) saturate(.9);
+      opacity:.95;
+    }
+
+    /* Burn "char" edges with masking gradients for uneven border */
+    .parchment .burn {
+      position:absolute;
+      inset:-10px;
+      border-radius:12px;
+      pointer-events:none;
+      z-index:5;
+      background:
+        radial-gradient(40px 40px at 6% 8%, rgba(0,0,0,0.7) 0 30%, rgba(0,0,0,0) 30%),
+        radial-gradient(60px 60px at 12% 92%, rgba(0,0,0,0.6) 0 30%, rgba(0,0,0,0) 30%),
+        radial-gradient(80px 60px at 92% 82%, rgba(0,0,0,0.6) 0 35%, rgba(0,0,0,0) 35%),
+        linear-gradient(180deg, rgba(0,0,0,0.18), rgba(0,0,0,0.06));
+      mix-blend-mode:multiply;
+      filter:blur(8px);
+      opacity:0.95;
+      transform:rotate(-0.8deg);
+    }
+
+    /* Paper fold/crease decoration */
+    .parchment .crease{
+      position:absolute;
+      top:60px; left:0; right:0;
+      height:10px;
+      background:linear-gradient(90deg, rgba(0,0,0,0.02), rgba(255,255,255,0.02));
+      opacity:0.6;
+      transform:skewX(-12deg);
+      pointer-events:none;
+    }
+
+    /* Header area */
+    header.agreement-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:18px;
+      flex-wrap:wrap;
+    }
+
+    .title{
+      display:flex;
+      align-items:baseline;
+      gap:12px;
+    }
+    .title h1{
+      margin:0;
+      font-family:"Cinzel",serif;
+      font-size:28px;
+      letter-spacing:2px;
+      text-transform:uppercase;
+      color: #4a2c12;
+      text-shadow: 0 1px 0 rgba(255,255,255,0.2);
+    }
+    .title .subtitle{
+      font-family:"Special Elite", monospace;
+      font-size:12px;
+      color:var(--muted);
+      margin-top:4px;
+    }
+
+    /* Date and quote */
+    .meta{
+      text-align:right;
+      font-size:13px;
+      color:var(--muted);
+    }
+    .quote{
+      margin-top:8px;
+      font-family:"Special Elite", monospace;
+      font-size:14px;
+      color:rgba(50,30,20,0.85);
+    }
+
+    /* Intro with typewriter */
+    .intro{
+      margin:22px 0 16px 0;
+      font-family: "Special Elite", monospace;
+      color: #3e2c1f;
+      line-height:1.6;
+      font-size:16px;
+      max-width:100%;
+      position:relative;
+    }
+    .typewriter-caret{
+      display:inline-block;
+      width:10px;
+      height:20px;
+      background:linear-gradient(90deg, rgba(0,0,0,0.4), rgba(0,0,0,0));
+      margin-left:6px;
+      vertical-align:middle;
+      animation:blink 1s steps(2) infinite;
+    }
+    @keyframes blink{50%{opacity:0}}
+
+    /* Rules list */
+    .rules{
+      margin:18px 0;
+      padding:18px 22px;
+      border-radius:8px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.35);
+      font-size:15px;
+      color:#3a2a1f;
+      line-height:1.6;
+    }
+
+    .rule{
+      margin-bottom:14px;
+      padding-bottom:6px;
+      border-bottom:1px dashed rgba(100,70,50,0.08);
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+    }
+    .rule .num{
+      font-family:"Cinzel",serif;
+      font-weight:700;
+      color:var(--accent);
+      font-size:18px;
+      min-width:48px;
+    }
+    .rule .text{
+      flex:1;
+      font-family:"Special Elite",monospace;
+      font-size:15px;
+      color:#412d1f;
+    }
+
+    /* Pen & decorative elements */
+    .decor{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-top:8px;
+    }
+    .pen{
+      width:56px;height:56px;border-radius:50%;
+      background:linear-gradient(135deg,#3e2a19,#6f4024);
+      display:flex;align-items:center;justify-content:center;
+      box-shadow:0 6px 14px rgba(0,0,0,0.35);
+      color:gold;
+      font-size:22px;
+    }
+
+    /* Signature area layout */
+    .sign-area{
+      display:flex;
+      gap:18px;
+      margin-top:18px;
+      align-items:flex-end;
+      flex-wrap:wrap;
+    }
+    .sig-box{
+      flex:1;
+      min-width:240px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+      border-radius:8px;
+      padding:12px;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,0.12);
+      position:relative;
+    }
+    .sig-box h3{
+      margin:0 0 8px 0;
+      font-family:"Cinzel", serif;
+      font-size:14px;
+      color:var(--accent);
+    }
+
+    /* Canvas signature */
+    .signature-canvas{
+      width:100%;
+      height:140px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.0), rgba(0,0,0,0.02));
+      border-radius:6px;
+      box-shadow:inset 0 2px 6px rgba(0,0,0,0.06);
+      border:1px dashed rgba(80,60,40,0.12);
+      touch-action: none; /* allow drawing on mobile */
+      position:relative;
+      overflow:hidden;
+    }
+
+    .sig-controls{
+      display:flex;
+      gap:10px;
+      margin-top:10px;
+      justify-content:flex-end;
+      align-items:center;
+    }
+    .btn{
+      background:linear-gradient(180deg,#fffdf6,#f3e7cf);
+      border:1px solid rgba(0,0,0,0.06);
+      padding:8px 12px;
+      border-radius:6px;
+      cursor:pointer;
+      box-shadow:0 4px 8px rgba(0,0,0,0.12);
+      font-family:"Special Elite", monospace;
+      font-size:13px;
+      color:var(--muted);
+      transition:transform .18s ease, box-shadow .18s ease;
+    }
+    .btn:hover{ transform:translateY(-3px); box-shadow:0 10px 18px rgba(0,0,0,0.12); }
+    .btn.danger{ background:#fbe9e6; color:#6a2b2b; border-color:rgba(120,20,20,0.08); }
+
+    /* Wax seal */
+    .seal{
+      position:absolute;
+      right:28px;
+      bottom:-36px;
+      z-index:60;
+      width:120px;height:120px;
+      border-radius:50%;
+      transform:translateY(30px) scale(.2) rotate(-25deg);
+      opacity:0;
+      pointer-events:none;
+      filter:drop-shadow(0 12px 18px rgba(0,0,0,0.45));
+      transition:all .9s cubic-bezier(.22,.9,.3,1);
+    }
+    .seal.show{ transform:translateY(0) scale(1) rotate(0); opacity:1; }
+
+    .seal .wax{
+      width:100%;height:100%;
+      background:radial-gradient(circle at 30% 20%, #ff9e66, #8f2a1f 50%, #5c1512 95%);
+      border-radius:50%;
+      box-shadow: inset 0 -6px 18px rgba(0,0,0,0.35), 0 8px 20px rgba(0,0,0,0.45);
+      position:relative;
+      overflow:hidden;
+    }
+    .seal .imprint{
+      position:absolute;
+      inset:18px;
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color: #ffe6c8;
+      font-weight:700;
+      font-family:"Cinzel";
+      font-size:18px;
+      transform:rotate(-6deg);
+      text-shadow:0 1px 1px rgba(0,0,0,0.2);
+      letter-spacing:1px;
+    }
+
+    /* Confetti canvas */
+    #confetti{
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      z-index:2000;
+    }
+
+    /* Footer */
+    footer{
+      margin-top:28px;
+      width:100%;
+      display:flex;
+      justify-content:center;
+      font-size:13px;
+      color:rgba(40,30,20,0.75);
+    }
+
+    /* Floating dust particles (subtle) */
+    .dust{
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      z-index:25;
+      overflow:hidden;
+      mix-blend-mode:screen;
+    }
+    .dust span{
+      position:absolute;
+      width:6px;height:6px;
+      background:rgba(255,255,240,0.6);
+      border-radius:50%;
+      filter:blur(1px);
+      opacity:0.08;
+      animation:drift linear infinite;
+    }
+    @keyframes drift{
+      from{ transform:translateY(-30vh) translateX(0) }
+      to{ transform:translateY(120vh) translateX(80px) }
+    }
+
+    /* Responsive */
+    @media (max-width:800px){
+      .parchment{ padding:22px; }
+      .signature-canvas{ height:120px; }
+      .seal{ width:94px; height:94px; right:16px; bottom:-22px; }
+      .title h1{ font-size:20px; }
+    }
+
+    /* Paper opening & fade-in */
+    .parchment.opening{
+      transform: rotateX(10deg) scale(.98) translateY(20px);
+      opacity:0;
+    }
+    .parchment.open{
+      animation:parchmentOpen 1s cubic-bezier(.18,.9,.3,1) forwards;
+    }
+    @keyframes parchmentOpen{
+      0% { transform: rotateX(25deg) translateY(30px) scale(.96); opacity:0; filter:blur(6px) }
+      60% { transform: rotateX(6deg) translateY(6px) scale(.99); opacity:1; filter:blur(0) }
+      100% { transform: rotateX(0deg) translateY(0) scale(1); opacity:1; filter:blur(0) }
+    }
+
+    /* Hover small flourishes */
+    .btn.icon{
+      display:inline-flex; align-items:center; gap:8px;
+    }
+
+    /* Decorative dividers (vintage) */
+    .divider{
+      display:block; text-align:center; margin:12px 0;
+    }
+    .divider:before{
+      content:"✻ ✻ ✻";
+      color:var(--muted);
+      letter-spacing:6px;
+      font-family:"Special Elite", monospace;
+      font-size:18px;
+    }
+
+    /* Tiny type for help text */
+    .help{
+      font-size:12px;color:rgba(50,30,20,0.6);
+      margin-top:6px;
+    }
+
+    /* Ink layer for spreading effect */
+    .ink-layer{ position:absolute; inset:0; pointer-events:none; z-index:40; overflow:hidden; }
+    .ink-blob{
+      position:absolute;
+      border-radius:50%;
+      background:radial-gradient(circle at 30% 30%, rgba(10,10,10,0.92), rgba(10,10,10,0.7));
+      opacity:0.9;
+      filter:blur(6px) saturate(1.2);
+      transform:translate(-50%,-50%) scale(.3);
+      animation:blobSpread 1.4s forwards ease-out;
+      mix-blend-mode:multiply;
+    }
+    @keyframes blobSpread {
+      to { opacity:0.55; transform:translate(-50%,-50%) scale(1.4); filter:blur(10px); }
+    }
+
+    /* Small print & controls area */
+    .controls-global{
+      display:flex;
+      gap:10px;
+      margin-top:18px;
+      justify-content:flex-end;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- Loading screen while we preload & animate -->
+  <div id="loading" class="loading" aria-hidden="false" role="status">
+    <div class="spinner" aria-hidden="true"></div>
+  </div>
+
+  <div class="stage">
+    <div class="parchment-wrap" role="main">
+      <!-- Dust particles -->
+      <div class="dust" aria-hidden="true"></div>
+
+      <!-- Parchment with burnt edges -->
+      <article class="parchment opening" id="parchment" aria-labelledby="main-title">
+        <div class="burn" aria-hidden="true"></div>
+        <div class="crease" aria-hidden="true"></div>
+
+        <header class="agreement-head">
+          <div class="title">
+            <h1 id="main-title">Friendship Trust Agreement</h1>
+            <div class="subtitle">A Victorian-style accord of mutual honesty</div>
+          </div>
+          <div class="meta">
+            <div id="current-date" aria-hidden="false">Date</div>
+            <div class="quote" id="rand-quote" aria-live="polite">Trust quote</div>
+            <div class="help">Auto date • Saveable signatures • Print or Download as PDF</div>
+          </div>
+        </header>
+
+        <section class="intro" id="intro">
+          <!-- Typewriter content inserted by JS -->
+          <span id="intro-text" aria-live="polite"></span>
+          <span class="typewriter-caret" aria-hidden="true"></span>
+        </section>
+
+        <div class="divider" aria-hidden="true"></div>
+
+        <section class="rules" aria-labelledby="rules-heading">
+          <h2 id="rules-heading" style="font-family:Cinzel;margin:0 0 12px 0;font-size:16px;color:#6a3b21;">Terms & Rules</h2>
+
+          <div class="rule">
+            <div class="num">Rule 1</div>
+            <div class="text"><strong>Secrets stay here.</strong><br>Whatever is shared between us stays between us. Don't tell anyone else. A secret shared is no longer a secret.</div>
+          </div>
+
+          <div class="rule">
+            <div class="num">Rule 2</div>
+            <div class="text"><strong>Bad mood? Tell me first.</strong><br>If something bad happens, you're upset, or your mood is off, tell me first. Don't bottle it up or pretend everything is fine.</div>
+          </div>
+
+          <div class="rule">
+            <div class="num">Rule 3</div>
+            <div class="text"><strong>Talk directly.</strong><br>If something is bothering you, ask me directly. Don't overthink. Don't assume things. Don't create ten different stories before hearing the real one.</div>
+          </div>
+
+          <div class="rule">
+            <div class="num">Rule 4</div>
+            <div class="text"><strong>No lying.</strong><br>Never lie. If you can't tell me something, simply say: "I can't tell you right now." That's completely okay. A delayed truth is always better than a fake one.</div>
+          </div>
+
+          <div class="rule" style="border-bottom:0;">
+            <div class="num">Penalty</div>
+            <div class="text"><strong>Penalty Clause</strong><br>Anyone who knowingly breaks any of the above rules shall pay one month's salary to the other person. No excuses. No loopholes. No "that's not what I meant." The Friendship Court's decision is final.</div>
+          </div>
+        </section>
+
+        <!-- Decorative area -->
+        <div class="decor" aria-hidden="true">
+          <div class="pen" title="Fountain pen">
+            <i class="fa-solid fa-feather-pointed" style="font-size:20px;color:#ffd59a;"></i>
+          </div>
+          <div style="flex:1">
+            <div style="font-family:Special Elite;color:#5b412f;font-size:13px">Please sign below to affirm adherence to the terms.</div>
+          </div>
+          <div style="text-align:right;min-width:170px">
+            <div style="font-size:12px;color:var(--muted)">Witness</div>
+            <div style="font-family:Special Elite;color:#3f2e24;margin-top:4px">Common Sense</div>
+          </div>
+        </div>
+
+        <!-- Signatures -->
+        <section class="sign-area" aria-label="Signatures">
+          <div class="sig-box" id="sig1-box" style="position:relative;">
+            <h3>Friend 1 Signature</h3>
+            <div class="signature-canvas" id="sig1-canvas-wrap">
+              <canvas id="sig1" class="sig-canvas" aria-label="Signature pad for friend 1"></canvas>
+              <div class="ink-layer" id="ink1"></div>
+            </div>
+            <div class="sig-controls">
+              <button class="btn" id="clear1" title="Clear signature 1"><i class="fa fa-eraser" aria-hidden="true"></i> Clear Signature</button>
+              <button class="btn" id="save1" title="Save to local"><i class="fa fa-save" aria-hidden="true"></i> Save</button>
+            </div>
+          </div>
+
+          <div class="sig-box" id="sig2-box" style="position:relative;">
+            <h3>Friend 2 Signature</h3>
+            <div class="signature-canvas" id="sig2-canvas-wrap">
+              <canvas id="sig2" class="sig-canvas" aria-label="Signature pad for friend 2"></canvas>
+              <div class="ink-layer" id="ink2"></div>
+            </div>
+            <div class="sig-controls">
+              <button class="btn" id="clear2" title="Clear signature 2"><i class="fa fa-eraser" aria-hidden="true"></i> Clear Signature</button>
+              <button class="btn" id="save2" title="Save to local"><i class="fa fa-save" aria-hidden="true"></i> Save</button>
+            </div>
+          </div>
+
+          <!-- Wax seal element (hidden until both sign) -->
+          <div class="seal" id="waxSeal" title="Wax seal of the Friendship Court" aria-hidden="true">
+            <div class="wax"></div>
+            <div class="imprint">FRIENDSHIP</div>
+          </div>
+        </section>
+
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-top:18px;">
+          <div>
+            <div class="help">Ink spreading while signing • Signatures persist via LocalStorage</div>
+            <div class="help" style="margin-top:4px">Tip: Use finger or stylus on touch devices. Click and drag with mouse on desktops.</div>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center;">
+            <div class="controls-global">
+              <button class="btn" id="resetAll"><i class="fa fa-rotate-left"></i> Reset Agreement</button>
+              <button class="btn" id="printBtn"><i class="fa fa-print"></i> Print</button>
+              <button class="btn" id="downloadBtn"><i class="fa fa-file-download"></i> Download PDF</button>
+            </div>
+          </div>
+        </div>
+
+        <footer>
+          <div>Signed in good faith, witnessed by common sense, and legally enforceable only by friendship.</div>
+        </footer>
+
+      </article>
+
+      <!-- Confetti canvas -->
+      <canvas id="confetti" width="800" height="600" aria-hidden="true"></canvas>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================
+       Friendship Agreement JS
+       Vanilla JS only. Well commented.
+       Features:
+       - Typewriter intro
+       - Random quote
+       - SignaturePad integration (2 pads)
+       - Ink spreading visual while drawing
+       - LocalStorage save & restore
+       - Wax seal reveal when both sign
+       - Confetti + stamp effects
+       - Print & html2pdf download
+       - Loading & parchment opening animation
+       ========================== */
+
+    // ---------- Utilities ----------
+    const q = (sel, root = document) => root.querySelector(sel);
+    const qa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+    const nowDate = () => {
+      const d = new Date();
+      return d.toLocaleDateString(undefined, { year:'numeric', month:'long', day:'numeric' });
+    };
+
+    // ---------- Intro text & quotes ----------
+    const introFull = `Since 'just trust me' clearly wasn't convincing enough, and one of us has trust issues (we both know who), this agreement has been officially created to reduce overthinking, misunderstandings, and unnecessary detective work.
+
+The following rules are now in effect.`;
+    const quotes = [
+      "Trust is cheaper than detective work.",
+      "Communication beats imagination.",
+      "Overthinking has been officially suspended.",
+      "Ask first. Assume later.",
+      "Honesty: cheaper, quicker, kinder.",
+      "A shared secret is a shared burden; honesty is lighter."
+    ];
+
+    // Random quote on refresh
+    function randomQuote(){
+      return quotes[Math.floor(Math.random()*quotes.length)];
+    }
+
+    // Typewriter animation for the intro
+    function typeIntro(targetEl, text, callback){
+      const speed = 18; // ms per char
+      let i = 0;
+      function step(){
+        i++;
+        targetEl.textContent = text.slice(0,i);
+        // Auto scroll parchment a little for mobile as we type
+        if(i < text.length) {
+          setTimeout(step, speed + Math.random()*30);
+        } else {
+          if(callback) callback();
+        }
+      }
+      step();
+    }
+
+    // ---------- Dust particles ----------
+    function spawnDust(){
+      const container = q('.dust');
+      container.innerHTML = '';
+      const c = Math.floor(Math.min(window.innerWidth, 1200) / 40);
+      for(let i=0;i<c;i++){
+        const s = document.createElement('span');
+        s.style.left = Math.random()*100 + '%';
+        s.style.top = Math.random()*50 + '%';
+        s.style.opacity = (Math.random()*0.08 + 0.02).toFixed(2);
+        s.style.transform = `scale(${(Math.random()*1.6+0.4).toFixed(2)})`;
+        s.style.animationDuration = (10 + Math.random()*30).toFixed(2) + 's';
+        s.style.animationDelay = (Math.random()*6).toFixed(2) + 's';
+        container.appendChild(s);
+      }
+    }
+
+    // ---------- Signature Pads Setup ----------
+    // We'll handle pixel ratio resizing for crisp strokes
+    const sig1Canvas = q('#sig1');
+    const sig2Canvas = q('#sig2');
+    let sigPad1, sigPad2;
+
+    function resizeCanvasForHiDPI(canvas){
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      const parent = canvas.parentElement;
+      const w = parent.clientWidth;
+      const h = parent.clientHeight;
+      canvas.width = Math.floor(w * ratio);
+      canvas.height = Math.floor(h * ratio);
+      canvas.style.width = w + 'px';
+      canvas.style.height = h + 'px';
+      const ctx = canvas.getContext('2d');
+      ctx.scale(ratio, ratio);
+      // set a white-ish transparent background to preserve paper look when exported
+      ctx.fillStyle = 'rgba(0,0,0,0)';
+      ctx.clearRect(0,0,w,h);
+    }
+
+    function initSignaturePads(){
+      // Make sure canvas parent sizes are defined
+      const wraps = [q('#sig1-canvas-wrap'), q('#sig2-canvas-wrap')];
+      function doResize(){
+        wraps.forEach(wrap=>{
+          const cnv = wrap.querySelector('canvas');
+          // set style height based on parent's computed height
+          cnv.style.height = wrap.clientHeight + 'px';
+          cnv.style.width = wrap.clientWidth + 'px';
+          resizeCanvasForHiDPI(cnv);
+          // If there is an image saved, re-render (SignaturePad keeps strokes, but when we resize we need to reload)
+        });
+        // After resize, if there are saved images, load them into pads
+        restoreSavedSignatures();
+      }
+
+      window.addEventListener('resize', () => {
+        // debounce
+        clearTimeout(window._resizeSig);
+        window._resizeSig = setTimeout(doResize, 120);
+      });
+
+      // Create signature instances
+      sigPad1 = new SignaturePad(sig1Canvas, {
+        backgroundColor: 'rgba(0,0,0,0)',
+        penColor: '#1f120b',
+        minWidth: 1.0,
+        maxWidth: 3.2,
+      });
+      sigPad2 = new SignaturePad(sig2Canvas, {
+        backgroundColor: 'rgba(0,0,0,0)',
+        penColor: '#1f120b',
+        minWidth: 1.0,
+        maxWidth: 3.4,
+      });
+
+      // Ink spreading effects while signing
+      attachInkEffect(sigPad1, '#ink1');
+      attachInkEffect(sigPad2, '#ink2');
+
+      // Resize then restore saved images
+      doResize();
+    }
+
+    // ---------- Ink spread visual while drawing ----------
+    function attachInkEffect(sigPad, inkSelector){
+      const inkLayer = q(inkSelector);
+      let drawing = false;
+
+      // Create small blobs at pointer locations
+      function addBlob(clientX, clientY, pressure = 0.6){
+        const rect = inkLayer.parentElement.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        const blob = document.createElement('div');
+        const size = (6 + Math.random()*24) * (0.8 + pressure);
+        blob.className = 'ink-blob';
+        blob.style.width = size + 'px';
+        blob.style.height = size + 'px';
+        blob.style.left = x + 'px';
+        blob.style.top = y + 'px';
+        blob.style.opacity = 0.95;
+        blob.style.background = 'radial-gradient(circle at 30% 30%, rgba(8,8,8,0.95), rgba(6,6,6,0.65))';
+        inkLayer.appendChild(blob);
+        setTimeout(()=> {
+          blob.style.opacity = 0.15;
+          blob.style.transform = 'translate(-50%,-50%) scale(1.8)';
+        },10);
+        // remove after animation
+        setTimeout(()=> blob.remove(), 1800);
+      }
+
+      // Hook into signature pad events by attaching pointer listeners to parent
+      const wrap = inkLayer.parentElement;
+      if(!wrap) return;
+      wrap.addEventListener('pointerdown', (e) => {
+        drawing = true;
+        addBlob(e.clientX, e.clientY, e.pressure || 0.6);
+      });
+      wrap.addEventListener('pointermove', (e) => {
+        if(!drawing) return;
+        // Add blobs with small probability to keep it subtle
+        if(Math.random() < 0.25) addBlob(e.clientX, e.clientY, e.pressure || 0.6);
+      });
+      wrap.addEventListener('pointerup', (e) => {
+        drawing = false;
+        // final blob
+        addBlob(e.clientX, e.clientY, e.pressure || 0.6);
+      });
+      // touchcancel/out
+      wrap.addEventListener('pointercancel', ()=> drawing = false);
+      wrap.addEventListener('pointerleave', ()=> drawing = false);
+    }
+
+    // ---------- LocalStorage Save/Restore ----------
+    const LS_SIG1 = 'friendship_sig1';
+    const LS_SIG2 = 'friendship_sig2';
+
+    function saveSignature(pad, key){
+      if(pad.isEmpty()){
+        localStorage.removeItem(key);
+        return;
+      }
+      const data = pad.toDataURL('image/png');
+      localStorage.setItem(key, data);
+    }
+
+    function restoreSavedSignatures(){
+      // restore signature images by drawing them onto canvas contexts
+      [ [sigPad1, LS_SIG1, sig1Canvas], [sigPad2, LS_SIG2, sig2Canvas] ].forEach(([pad,key,canvas])=>{
+        const data = localStorage.getItem(key);
+        if(data && canvas){
+          const ctx = canvas.getContext('2d');
+          // clear pad then draw image
+          const img = new Image();
+          img.onload = function(){
+            // Clear and draw (scale preserved automatically since dataURL is same device)
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            // Draw with CSS pixel scaling consideration:
+            // canvas.width/height might be device pixel size; but the dataURL was created at canvas size earlier.
+            // drawImage auto scales to the canvas element's internal size. We use image natural size.
+            ctx.drawImage(img, 0, 0, canvas.width / (window.devicePixelRatio||1), canvas.height / (window.devicePixelRatio||1));
+          };
+          img.src = data;
+          // Mark pad as not empty by loading image onto internal strokes is not possible,
+          // but we can keep it visually persisted and treat pad.isEmpty check separately:
+          // We use localStorage presence as indicator of signed state too.
+        } else {
+          // nothing saved; clear the canvas to be safe
+          // Clear canvas context
+          if(canvas){
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+          }
+        }
+      });
+
+      // After restore, check for both signatures to reveal seal if present
+      setTimeout(checkBothSigned, 220);
+    }
+
+    // ---------- Buttons & Actions ----------
+    function wireControls(){
+      q('#clear1').addEventListener('click', ()=>{
+        sigPad1.clear();
+        localStorage.removeItem(LS_SIG1);
+        // remove any ink blobs
+        q('#ink1').innerHTML = '';
+        checkBothSigned();
+      });
+      q('#clear2').addEventListener('click', ()=>{
+        sigPad2.clear();
+        localStorage.removeItem(LS_SIG2);
+        q('#ink2').innerHTML = '';
+        checkBothSigned();
+      });
+
+      q('#save1').addEventListener('click', ()=>{
+        saveSignature(sigPad1, LS_SIG1);
+        showTinyToast('Friend 1 signature saved locally');
+        checkBothSigned();
+      });
+      q('#save2').addEventListener('click', ()=>{
+        saveSignature(sigPad2, LS_SIG2);
+        showTinyToast('Friend 2 signature saved locally');
+        checkBothSigned();
+      });
+
+      q('#resetAll').addEventListener('click', ()=>{
+        if(!confirm('Reset the agreement? This clears saved signatures and resets the seal.')) return;
+        sigPad1.clear(); sigPad2.clear();
+        localStorage.removeItem(LS_SIG1); localStorage.removeItem(LS_SIG2);
+        q('#ink1').innerHTML = ''; q('#ink2').innerHTML = '';
+        hideSeal();
+        showTinyToast('Agreement reset');
+      });
+
+      q('#printBtn').addEventListener('click', ()=>{
+        // Print just the parchment element for cleaner output
+        // Temporarily open new window with cloned node for print to avoid page UI
+        window.print();
+      });
+
+      q('#downloadBtn').addEventListener('click', async ()=>{
+        // Download PDF using html2pdf
+        const element = q('.parchment');
+        const opt = {
+          margin:       [0.3, 0.3],
+          filename:     'Friendship_Agreement.pdf',
+          image:        { type: 'jpeg', quality: 0.98 },
+          html2canvas:  { scale: 2, useCORS: true, backgroundColor: null },
+          jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+        };
+        showTinyToast('Preparing PDF…');
+        html2pdf().set(opt).from(element).save().then(()=> {
+          showTinyToast('PDF downloaded');
+        }).catch(err=>{
+          console.error(err);
+          showTinyToast('PDF generation failed');
+        });
+      });
+    }
+
+    // Tiny toast messages (non-intrusive)
+    function showTinyToast(msg){
+      const t = document.createElement('div');
+      t.textContent = msg;
+      t.style.position = 'fixed';
+      t.style.bottom = '22px';
+      t.style.left = '50%';
+      t.style.transform = 'translateX(-50%)';
+      t.style.background = 'rgba(20,12,8,0.9)';
+      t.style.color = '#fff';
+      t.style.padding = '10px 14px';
+      t.style.borderRadius = '8px';
+      t.style.boxShadow = '0 6px 18px rgba(0,0,0,0.5)';
+      t.style.zIndex = 3000;
+      t.style.fontFamily = 'Special Elite, monospace';
+      t.style.opacity = 0;
+      t.style.transition = 'opacity .3s, transform .3s';
+      document.body.appendChild(t);
+      requestAnimationFrame(()=> {
+        t.style.opacity = 1;
+        t.style.transform = 'translateX(-50%) translateY(-6px)';
+      });
+      setTimeout(()=> {
+        t.style.opacity = 0;
+        t.style.transform = 'translateX(-50%) translateY(0)';
+        setTimeout(()=> t.remove(), 420);
+      }, 1800);
+    }
+
+    // ---------- Wax seal reveal & confetti ----------
+    const seal = q('#waxSeal');
+    function checkBothSigned(){
+      // Determine if both signatures exist: check either signaturePads not empty OR localStorage saved images
+      const s1 = !sigPad1.isEmpty() || !!localStorage.getItem(LS_SIG1);
+      const s2 = !sigPad2.isEmpty() || !!localStorage.getItem(LS_SIG2);
+      if(s1 && s2){
+        revealSeal();
+      } else {
+        hideSeal();
+      }
+    }
+
+    function revealSeal(){
+      if(seal.classList.contains('show')) return;
+      // show seal with an animation
+      seal.classList.add('show');
+      // Play stamp sound (simple generated click) and animate 'press' by scaling the wax inner element
+      stampSound();
+      confettiBurst();
+    }
+    function hideSeal(){
+      seal.classList.remove('show');
+    }
+
+    // Simple stamp "click" using WebAudio (no external file)
+    function stampSound(){
+      try{
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = 'square';
+        o.frequency.value = 320;
+        g.gain.value = 0.0001;
+        o.connect(g);
+        g.connect(ctx.destination);
+        o.start();
+        g.gain.exponentialRampToValueAtTime(0.2, ctx.currentTime + 0.01);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
+        o.stop(ctx.currentTime + 0.26);
+      }catch(e){
+        // ignore on unsupported devices
+      }
+    }
+
+    // Confetti: simple canvas particles
+    function confettiBurst(){
+      const cvs = q('#confetti');
+      const ctx = cvs.getContext('2d');
+      let width = cvs.width = window.innerWidth;
+      let height = cvs.height = window.innerHeight;
+      const particles = [];
+      const colors = ['#f4d35e','#ee964b','#f95738','#4aa96c','#8fd3f4','#c08b2a'];
+
+      function spawn(n){
+        for(let i=0;i<n;i++){
+          particles.push({
+            x: width/2 + (Math.random()-0.5)*200,
+            y: height/2 - 20 + (Math.random()-0.5)*80,
+            vx: (Math.random()-0.5)*6,
+            vy: Math.random()*-8 - 2,
+            r: 6 + Math.random()*8,
+            color: colors[Math.floor(Math.random()*colors.length)],
+            rot: Math.random()*360,
+            vrot: (Math.random()-0.5)*10,
+            life: 60 + Math.random()*80
+          });
+        }
+      }
+
+      function loop(){
+        ctx.clearRect(0,0,width,height);
+        for(let i=particles.length-1;i>=0;i--){
+          const p = particles[i];
+          p.vy += 0.35; // gravity
+          p.vx *= 0.995;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rot += p.vrot;
+          p.life--;
+          ctx.save();
+          ctx.translate(p.x,p.y);
+          ctx.rotate(p.rot * Math.PI/180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.r/2, -p.r/2, p.r, p.r*0.6);
+          ctx.restore();
+          if(p.life <= 0 || p.y > height + 30) particles.splice(i,1);
+        }
+        if(particles.length > 0) requestAnimationFrame(loop);
+      }
+
+      spawn(140);
+      loop();
+
+      // clear canvas after a while
+      setTimeout(()=> ctx.clearRect(0,0,width,height), 4000);
+    }
+
+    // ---------- Loading & Opening sequence ----------
+    function showOpeningSequence(){
+      // 1) spawn dust
+      spawnDust();
+
+      // 2) show typewriter
+      const introTextEl = q('#intro-text');
+      introTextEl.textContent = '';
+      typeIntro(introTextEl, introFull, ()=> {
+        // after typing completes, close caret
+      });
+
+      // 3) populate date & random quote
+      q('#current-date').textContent = nowDate();
+      q('#rand-quote').textContent = randomQuote();
+
+      // 4) animate parchment opening after short delay
+      setTimeout(()=>{
+        const par = q('.parchment');
+        par.classList.remove('opening');
+        par.classList.add('open');
+      }, 700);
+
+      // 5) hide loading overlay
+      setTimeout(()=>{
+        q('#loading').classList.add('hidden');
+        q('#loading').setAttribute('aria-hidden', 'true');
+      }, 1200);
+    }
+
+    // ---------- Save signatures automatically on draw end ----------
+    function wireSignatureAutoSave(){
+      // Hook up onEnd event for pads: SignaturePad exposes onEnd property
+      sigPad1.onEnd = function(){ saveSignature(sigPad1, LS_SIG1); checkBothSigned(); };
+      sigPad2.onEnd = function(){ saveSignature(sigPad2, LS_SIG2); checkBothSigned(); };
+    }
+
+    // ---------- Initializer ----------
+    function init(){
+      // Initialize canvas sizes and signature pads
+      initSignaturePads();
+
+      // Wire controls
+      wireControls();
+
+      // Restore signatures (if any)
+      restoreSavedSignatures();
+
+      // Wire auto save & events
+      wireSignatureAutoSave();
+
+      // More event wiring
+      // When user clears pads directly using signaturePad methods (e.g. by erasing), we must catch and update LS.
+      // Since there are no direct events for clear, we can attach to buttons and auto save on end.
+
+      // Listen for manual drawing that leaves pad non-empty to update UI
+      setInterval(checkBothSigned, 1200);
+
+      // Opening sequence & hide loader
+      showOpeningSequence();
+
+      // Make printable area friendly: smooth scrolling behavior
+      document.documentElement.style.scrollBehavior = 'smooth';
+    }
+
+    // ---------- Run init after DOM ready ----------
+    document.addEventListener('DOMContentLoaded', ()=> {
+      init();
+
+      // Make dust responsive
+      window.addEventListener('resize', ()=> spawnDust());
+
+      // Simple accessibility: allow keyboard shortcuts
+      document.addEventListener('keydown', (e)=>{
+        if(e.ctrlKey && e.key === 's'){ e.preventDefault(); saveSignature(sigPad1, LS_SIG1); saveSignature(sigPad2, LS_SIG2); showTinyToast('Signatures saved'); }
+      });
+
+      // Ensure parchment open class toggles on load
+      setTimeout(()=> q('.parchment').classList.add('open'), 300);
+    });
+
+    // ---------- Extra: ensure canvas internal drawing persists after reload (reconstruct strokes) ----------
+    // Note: SignaturePad's fromDataURL requires the pad to not be resized differently. For simplicity we store PNGs.
+
+    // ---------- Accessibility & Finish ----------
+    // Everything above is intentionally kept in vanilla JS and CSS-only animations where possible.
+    // The page is responsive and will adapt to mobile screens.
+
+  </script>
+</body>
+</html>
